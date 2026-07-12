@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "stars-calculator",
+  "version": "0.0.1",
+  "name": "Star's Calculator",
+  "description": "A fully functional in-game calculator.",
+  "authors": [
+    "You"
+  ],
+  "contact": {},
+  "license": "CC0-1.0",
+  "icon": "assets/stars-calculator/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.starcalculator.StarsCalculator"
+    ],
+    "client": [
+      "com.starcalculator.client.StarsCalculatorClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "26.2",
+    "java": ">=25"
+  }
+}
