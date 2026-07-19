@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.client.renderer.RenderPipelines;
 
 public class CalculatorScreen extends Screen {
     private static final Identifier WHITE =
@@ -17,6 +18,7 @@ public class CalculatorScreen extends Screen {
     private String result = "";
     private int stackMode = 64;
     private String stackResult = "";
+    private int expressionScroll = 0;
     private final ExpressionParser parser = new ExpressionParser();
 
     public CalculatorScreen() {
@@ -45,50 +47,35 @@ public class CalculatorScreen extends Screen {
         int resultColor = 0xFFDCE9DD;      // Sage accent (stack mode pill)
         int textColor = 0xFF444444;        // Charcoal text
         int shadowColor = 0x22000000;      // shadow color
+        int bg = 0xFFE9D8EB;
 
-        // Shadow
-        graphics.fill(
-                left - 4,
-                top - 4,
-                left + guiWidth + 4,
-                top + guiHeight + 4,
-                shadowColor
-        );
+        graphics.fill(left, top, left + 220, top + 200, bg);
 
-        // body color
+        // Header
         graphics.fill(
                 left,
                 top,
-                left + guiWidth,
-                top + guiHeight,
-                backgroundColor
-        );
-
-        // top cap? idk maybe it looks good
-        graphics.fill(
-                left,
-                top,
-                left + guiWidth,
+                left + 220,
                 top + 24,
-                accentColor
+                0xFFC5ACD9
         );
 
-        // Background
+        // Expression box
         graphics.fill(
-                left + 16,
-                top + 39,
-                left + guiWidth - 16,
-                top + 71,
-                displayBackground
+                left + 18,
+                top + 42,
+                left + 202,
+                top + 74,
+                0xFFFFFFFF
         );
 
-        // Result background
+        // Result box
         graphics.fill(
-                left + 16,
-                top + 105,
-                left + guiWidth - 16,
-                top + 137,
-                resultDisplay
+                left + 18,
+                top + 108,
+                left + 202,
+                top + 140,
+                0xFFEAF7EE
         );
 
         // Title
@@ -96,28 +83,45 @@ public class CalculatorScreen extends Screen {
                 this.font,
                 Component.literal("Star's Calculator"),
                 left + 18,
-                top + 14,
-                textColor,
+                top + 13,
+                0xFF444444,
                 false
         );
+
+        // Scrolling
+        int expressionBoxWidth = 172; // 202 - 18 - padding
+
+        int textWidth = this.font.width(expression);
+
+        expressionScroll = Math.max(0, textWidth - expressionBoxWidth);
+
+        // Clipping
+        graphics.enableScissor(
+                left + 24,
+                top + 42,
+                left + 196,
+                top + 74
+        );
+
 
         // Current expression
         graphics.text(
                 this.font,
                 Component.literal(expression),
-                left + 24,
-                top + 50,
-                textColor,
+                left + 24 - expressionScroll,
+                top + 51,
+                0xFF444444,
                 false
         );
+        graphics.disableScissor();
 
         // Result text
         graphics.text(
                 this.font,
                 Component.literal("Result"),
-                left + 18,
-                top + 90,
-                textColor,
+                left + 24,
+                top + 100,
+                0xFF444444,
                 false
         );
 
@@ -125,9 +129,9 @@ public class CalculatorScreen extends Screen {
         graphics.text(
                 this.font,
                 Component.literal(result),
-                left + 20,
-                top + 118,
-                textColor,
+                left + 24,
+                top + 115,
+                0xFF444444,
                 false
         );
 
@@ -135,20 +139,24 @@ public class CalculatorScreen extends Screen {
         graphics.text(
                 this.font,
                 Component.literal(
-                        stackMode == 0 ? "Stack Mode: Off" : "Stack Mode: x" + stackMode
+                        stackMode == 0
+                                ? "Stack Mode: Off"
+                                : "Stack Mode: x" + stackMode
                 ),
-                left + 18,
-                top + 152,
-                textColor,
+                left + 22,
+                top + 154,
+                0xFF444444,
                 false
         );
+
+        // Stack result
         if (stackMode != 0) {
             graphics.text(
                     this.font,
                     Component.literal(stackResult),
-                    left + 18,
-                    top + 164,
-                    textColor,
+                    left + 22,
+                    top + 172,
+                    0xFF444444,
                     false
             );
         }
