@@ -1,13 +1,15 @@
 package com.starcalculator.client;
-import net.minecraft.resources.Identifier;
+
+import com.mojang.blaze3d.platform.InputConstants;
 import com.starcalculator.client.math.ExpressionParser;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
 
 public class CalculatorScreen extends Screen {
+
     private static final Identifier WHITE =
             Identifier.fromNamespaceAndPath(
                     "stars-calculator",
@@ -25,13 +27,17 @@ public class CalculatorScreen extends Screen {
         super(Component.literal("Star's Calculator"));
     }
 
-    @Override
-    protected void init() {
-        super.init();
+    public void addCharacter(char c) {
+        expression += c;
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float tickProgress) {
+    public void extractRenderState(
+            GuiGraphicsExtractor graphics,
+            int mouseX,
+            int mouseY,
+            float tickProgress
+    ) {
         super.extractRenderState(graphics, mouseX, mouseY, tickProgress);
 
         int guiWidth = 220;
@@ -40,18 +46,16 @@ public class CalculatorScreen extends Screen {
         int left = (this.width - guiWidth) / 2;
         int top = (this.height - guiHeight) / 2;
 
-        int backgroundColor = 0xFFF7F3EF;      // Warm cream (calculator body)
-        int displayBackground = 0xFFFFFFFF;    // White paper (expression display)
-        int accentColor = 0xFFD8C8E8;      // Soft lavender
-        int resultDisplay = 0xFFE8F7EF;  // Soft mint (result display)
-        int resultColor = 0xFFDCE9DD;      // Sage accent (stack mode pill)
-        int textColor = 0xFF444444;        // Charcoal text
-        int shadowColor = 0x22000000;      // shadow color
         int bg = 0xFFE9D8EB;
 
-        graphics.fill(left, top, left + 220, top + 200, bg);
+        graphics.fill(
+                left,
+                top,
+                left + 220,
+                top + 200,
+                bg
+        );
 
-        // Header
         graphics.fill(
                 left,
                 top,
@@ -60,7 +64,6 @@ public class CalculatorScreen extends Screen {
                 0xFFC5ACD9
         );
 
-        // Expression box
         graphics.fill(
                 left + 18,
                 top + 42,
@@ -69,7 +72,6 @@ public class CalculatorScreen extends Screen {
                 0xFFFFFFFF
         );
 
-        // Result box
         graphics.fill(
                 left + 18,
                 top + 108,
@@ -78,7 +80,6 @@ public class CalculatorScreen extends Screen {
                 0xFFEAF7EE
         );
 
-        // Title
         graphics.text(
                 this.font,
                 Component.literal("Star's Calculator"),
@@ -88,14 +89,14 @@ public class CalculatorScreen extends Screen {
                 false
         );
 
-        // Scrolling
-        int expressionBoxWidth = 172; // 202 - 18 - padding
-
+        int expressionBoxWidth = 172;
         int textWidth = this.font.width(expression);
 
-        expressionScroll = Math.max(0, textWidth - expressionBoxWidth);
+        expressionScroll = Math.max(
+                0,
+                textWidth - expressionBoxWidth
+        );
 
-        // Clipping
         graphics.enableScissor(
                 left + 24,
                 top + 42,
@@ -103,8 +104,6 @@ public class CalculatorScreen extends Screen {
                 top + 74
         );
 
-
-        // Current expression
         graphics.text(
                 this.font,
                 Component.literal(expression),
@@ -113,9 +112,9 @@ public class CalculatorScreen extends Screen {
                 0xFF444444,
                 false
         );
+
         graphics.disableScissor();
 
-        // Result text
         graphics.text(
                 this.font,
                 Component.literal("Result"),
@@ -125,7 +124,6 @@ public class CalculatorScreen extends Screen {
                 false
         );
 
-        // Result
         graphics.text(
                 this.font,
                 Component.literal(result),
@@ -135,7 +133,6 @@ public class CalculatorScreen extends Screen {
                 false
         );
 
-        // Stack
         graphics.text(
                 this.font,
                 Component.literal(
@@ -149,7 +146,6 @@ public class CalculatorScreen extends Screen {
                 false
         );
 
-        // Stack result
         if (stackMode != 0) {
             graphics.text(
                     this.font,
@@ -164,53 +160,70 @@ public class CalculatorScreen extends Screen {
 
     @Override
     public boolean keyPressed(KeyEvent event) {
+        InputConstants.Key key = InputConstants.getKey(event);
+        String keyName = key.toString();
 
-        switch (event.key()) {
+        String prefix = "key.keyboard.";
 
-            // Backspace
-            case 259 -> {
-                if (!expression.isEmpty()) {
-                    expression = expression.substring(0, expression.length() - 1);
+        if (keyName.startsWith(prefix)) {
+            String keyboardKey = keyName.substring(prefix.length());
+
+            if (keyboardKey.equals("8") && (event.modifiers() & 1) != 0) {
+                expression += "*";
+                return true;
+            }
+
+            if (keyboardKey.length() == 1
+                    && Character.isDigit(keyboardKey.charAt(0))) {
+                expression += keyboardKey;
+                return true;
+            }
+
+            switch (keyboardKey) {
+                case "x" -> expression += "x";
+                case "minus" -> expression += "-";
+                case "slash" -> expression += "/";
+                case "equal" -> {
+                    if ((event.modifiers() & 1) != 0) {
+                        expression += "+";
+                    }
                 }
-                return true;
+
+                case "backspace" -> {
+                    if (!expression.isEmpty()) {
+                        expression = expression.substring(
+                                0,
+                                expression.length() - 1
+                        );
+                    }
+                }
+
+                case "enter", "kp_enter" -> calculate();
+
+                case "tab" -> {
+                    switch (stackMode) {
+                        case 64 -> stackMode = 16;
+                        case 16 -> stackMode = 0;
+                        default -> stackMode = 64;
+                    }
+
+                    updateStackResult();
+                }
+
+                default -> {
+                    return super.keyPressed(event);
+                }
             }
 
-            // Enter
-            case 257, 335 -> {
-                calculate();
-                return true;
-            }
-        }
-        if (event.key() == 258) { // TAB
-            switch (stackMode) {
-                case 64 -> stackMode = 16;
-                case 16 -> stackMode = 0;
-                default -> stackMode = 64;
-            }
-
-            updateStackResult();
             return true;
         }
+
         return super.keyPressed(event);
-    }
-
-    @Override
-    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
-        char c = event.codepointAsString().charAt(0);
-
-        if ("0123456789+-x*/.".indexOf(c) != -1) {
-            expression += c;
-        }
-
-        return true;
     }
 
     private void calculate() {
         try {
-
-            // Accept both x and *
             String input = expression.replace("x", "*");
-
             double answer = parser.evaluate(input);
 
             if (answer == Math.floor(answer)) {
@@ -225,15 +238,14 @@ public class CalculatorScreen extends Screen {
             result = "Error";
         }
     }
-    private void updateStackResult() {
 
+    private void updateStackResult() {
         if (stackMode == 0) {
             stackResult = "";
             return;
         }
 
         try {
-
             double value = Double.parseDouble(result);
 
             int stacks = (int) (value / stackMode);

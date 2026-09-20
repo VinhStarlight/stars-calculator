@@ -28,11 +28,10 @@ loom {
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
-
-	// These MUST be modImplementation so Fabric translates them properly!
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	"clientImplementation" "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	clientImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
 
 processResources {

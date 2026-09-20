@@ -10,6 +10,6 @@ public class StarsCalculator implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOGGER.info("calculator works lol");
+        LOGGER.info("calculator launched yayyy");
     }
 }
